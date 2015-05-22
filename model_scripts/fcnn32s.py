@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 caffe_root = "/home/chriswc/dev/caffe"
 
-data_sample = "/srv/datasets/mscoco/test2014/COCO_test2014_000000000001.jpg"
+data_sample = "/srv/datasets/sos/img/COCO_COCO_train2014_000000288018.jpg"
 
 gist_id = "ALEXNET_CNN_SOS"
 deploy = "/models/" + gist_id + "/deploy.prototxt"
@@ -11,9 +11,9 @@ pretrained = "/models/" + gist_id + "/AlexNet_SalObjSub.caffemodel"
 
 import caffe
 
-plt.rcParams['figure.figsize'] = (10, 10)
-plt.rcParams['image.interpolation'] = 'nearest'
-plt.rcParams['image.cmap'] = 'gray'
+#plt.rcParams['figure.figsize'] = (10, 10)
+#plt.rcParams['image.interpolation'] = 'nearest'
+#plt.rcParams['image.cmap'] = 'gray'
 
 import os
 
@@ -44,13 +44,13 @@ def vis_square(data, padsize=1, padval=0):
     data = data.reshape((n, n) + data.shape[1:]).transpose((0, 2, 1, 3) + tuple(range(4, data.ndim + 1)))
     data = data.reshape((n * data.shape[1], n * data.shape[3]) + data.shape[4:])
     plt.imshow(data)
-    plt.show
+    plt.show()
 
-#f = net.params['conv1'][0].data
-#vis_square(f.transpose(0,2,3,1))
+f = net.params['conv1'][0].data
+vis_square(f.transpose(0,2,3,1))
 
-f = net.blobs['conv1'].data[0. :36]
-vis_square(f, padval=1)
+#f = net.blobs['conv1'].data[0 :36]
+#vis_square(f, padval=1)
 
-#f = net.params['conv2'][0].data
-#vis_square(f[:48].reshape(48**2,5,5))
+f = net.params['conv2'][0].data
+vis_square(f[:48].reshape(48**2,5,5))
