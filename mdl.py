@@ -77,27 +77,24 @@ class MDL:
 
     		data = data.reshape((n, n) + data.shape[1:]).transpose((0, 2, 1, 3) + tuple(range(4, data.ndim + 1)))
     		data = data.reshape((n * data.shape[1], n * data.shape[3]) + data.shape[4:])
-    		plt.imshow(data)
-    		plt.show()
+    		iplt = plt.imshow(data)
 
 	def visualizeLayers(self):
-		f = self.net.blobs['conv1_1'].data[0, :36]
-		vis_square(f, padval=1)
-
-		f = self.net.blobs['pool5'].data[0, :36]
-		vis_square(f, padval=0)
-
 		for k, v in self.net.blobs.items():
-			if len(v) == 4:
-				f = self.net.blobs[k].data[0, :36]
-				vis_square(f, padval=0)
+			print k
+			f = self.net.blobs[k].data[0, :36]
+			self.vis_square(f, padval=0)
+			plt.savefig("output/" + k + ".jpg", format='jpg')
+		plt.show()
 
 	def visualizeFilters(self):
 		print "Visualizing Filters"
 
 
 def FCNN_32s():
-	model = MDL("~/dev/caffe/","/srv/datasets/mscoco/test2014/","models/FCN_32s_PASCAL/fcn-32s-pascal-deploy.prototxt","","models/FCN_32s_PASCAL/fcn-32s-pascal.caffemodel")
+	model = MDL(caffe_root="/home/chriswc/dev/caffe/",data_location="/srv/datasets/mscoco/test2014/",deploy_file="models/FCN_32s_PASCAL/fcn-32s-pascal-deploy.prototxt",pretrained_file="models/FCN_32s_PASCAL/fcn-32s-pascal.caffemodel")
 	model.configure()
 	model.load_data()
 	model.runTest(model.data)
+	#return model
+	model.visualizeLayers()

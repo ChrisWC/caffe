@@ -52,3 +52,9 @@ vis_square(f, padval=1)
 
 f = net.blobs['pool5'].data[0, :36]
 vis_square(f, padval=0)
+
+#f = net.blobs['upsample'].data[0, :36]
+#vis_square(f, padval=0)
+
+#f = net.blobs['crop'].data[0, :36]
+#vis_square(f, padval=0)
