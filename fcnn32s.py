@@ -28,8 +28,8 @@ transformer.set_raw_scale('data', 255)
 transformer.set_channel_swap('data', (2,1,0))
 net.blobs['data'].reshape(1,3,500,500)
 net.blobs['data'].data[...] = transformer.preprocess('data', caffe.io.load_image(data_sample))
-plt.imshow(transformer.deprocess('data', net.blobs['data'].data[0]))
-plt.show()
+#plt.imshow(transformer.deprocess('data', net.blobs['data'].data[0]))
+#plt.show()
 
 out = net.forward();
 
@@ -46,5 +46,9 @@ def vis_square(data, padsize=1, padval=0):
     plt.imshow(data)
     plt.show()
 
-f = net.params['conv1_1'][0].data
-vis_square(f.transpose(0,2,3,1))
+f = net.blobs['conv1_1'].data[0, :36]
+vis_square(f, padval=1)
+
+
+f = net.blobs['pool5'].data[0, :36]
+vis_square(f, padval=0)
