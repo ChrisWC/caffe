@@ -11,13 +11,14 @@ pretrained = "/models/" + gist_id + "/AlexNet_SalObjSub.caffemodel"
 
 import caffe
 
-#plt.rcParams['figure.figsize'] = (10, 10)
-#plt.rcParams['image.interpolation'] = 'nearest'
-#plt.rcParams['image.cmap'] = 'gray'
+plt.rcParams['figure.figsize'] = (10, 10)
+plt.rcParams['image.interpolation'] = 'nearest'
+plt.rcParams['image.cmap'] = 'gray'
 
 import os
 
-caffe.set_mode_cpu()
+caffe.set_mode_gpu()
+caffe.set_device(0)
 
 net = caffe.Net(caffe_root + deploy, caffe_root + pretrained, caffe.TEST);
 
@@ -46,11 +47,20 @@ def vis_square(data, padsize=1, padval=0):
     plt.imshow(data)
     plt.show()
 
-f = net.params['conv1'][0].data
-vis_square(f.transpose(0,2,3,1))
+#f = net.params['conv1'][0].data
+#vis_square(f.transpose(0,2,3,1))
 
-#f = net.blobs['conv1'].data[0 :36]
-#vis_square(f, padval=1)
+f = net.blobs['conv1'].data[0, :36]
+vis_square(f, padval=1)
 
-f = net.params['conv2'][0].data
-vis_square(f[:48].reshape(48**2,5,5))
+#f = net.params['conv2'][0].data
+#vis_square(f[:48].reshape(48**2,5,5))
+
+f = net.blobs['conv2'].data[0, :36]
+vis_square(f, padval=1);
+
+f = net.blobs['pool5'].data[0, :36]
+vis_square(f, padval=0)
+
+#f = net.blobs['relu6']
+#vis_square(f, padval=0)
