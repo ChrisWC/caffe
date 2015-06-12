@@ -1,0 +1,12 @@
+{
+    "DefaultRoot":"$USER",
+    "DefaultBranch":"Master",
+    "AllowModelBranchSpecification":true,
+    "SystemRoot":{"Master":{"Location":"/opt/caffe"}, "Future":{"Location":"/opt/caffe/future"}},
+    "UserRoot":{"Master":{"Location":"/dev/caffe"}, "Future":{"Location":"/opt/caffe/future"}},
+    "UserModelRoot":"/dev/caffe/models",
+    "SystemModelRoot":"/opt/caffe/models",
+    "DefaultDatasetRoot":"$SYSTEM",
+    "SystemDatasetRoot":"/srv/datasets",
+    "UserDatasetRoot":"/datasets"
+}

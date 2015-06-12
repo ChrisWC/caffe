@@ -1,0 +1,40 @@
+{
+    "Pascal VOC 2010":{
+	    "Remote":[
+		    {
+			    "URL":"",
+			    "FORMAT":""
+		    }
+
+	    ],
+        "Directories":[
+            {
+                "Name":["Input Images"],
+                "Function":["Input","Training","Testing", "Data"],
+                "Format":["JPEG"],
+                "Directory":["/pascal/VOCdevkit/VOC2010/JPEGImages"]
+            },
+            {
+                "Name":["Segmentation Class Images"],
+                "Function":["Input","Training","Labels","Segmentation", "Class Segmentation"],
+                "Format":["PNG"],
+                "Directory":["/pascal/VOCdevkit/VOC2010/SegmentationClass"]
+            },
+            {
+                "Function":["Annotation", "Training", "Labels", "Bounding Boxes"],
+                "Format":["json","annotations"]
+            },
+            {
+                "Name":["Segmentation Sets"],
+                "Function":["File Set", "Training", "Testing", "Segmentation"],
+                "Format":["txt","file list","list"],
+                "Directory":["/pascal/VOCdevkit/VOC2010/ImageSets/Segmentation"],
+                "Files":{
+                    "train.txt":{"Function":["File Set", "Training"], "Format":["txt","list"]},
+                    "val.txt":{"Function":["File Set", "Validation"], "Format":["txt","list"]},
+                    "trainval.txt":{"Function":["File Set", "Validation"], "Format":["txt","list"]}
+                }
+            }
+        ]
+    }
+}

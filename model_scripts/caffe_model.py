@@ -11,7 +11,9 @@ class MDL:
                 solve_file="",
                 pretrained_file="",
                 output_dir="~/dev/caffe/out",
-                model_dir="./models/"):
+                model_root=None,
+                model_dir=None,
+                gist_id=None):
         self.data_location = data_location
         self.caffe_root = caffe_root
         #self.data_size = data_size
@@ -27,6 +29,7 @@ class MDL:
         self.default_image_format = "jpg"
         self.solver = None
         self.data_dim = [1,3,227,227]
+        self.dataset_root = None
 
         import sys
         sys.path.insert(0, caffe_root + '/python')
@@ -35,6 +38,189 @@ class MDL:
 
         self.transformer = None
         self.model_dir= model_dir
+        self.gist_id = gist_id
+        self.allowModelBranchSpecification = True
+
+    def setToDefault(self, config_file=None):
+        import json
+        import os
+
+        if config_file == None:
+            config_file = 'caffe.config.json'
+
+        with open(config_file) as caffe_config:
+            config = json.load(caffe_config)
+
+            print "Loading Defaults"
+            if config["DefaultRoot"] == "$USER":
+                self.caffe_root = "/home/" + os.environ.get('USER') + config["UserRoot"][config["DefaultBranch"]]["Location"]
+                self.model_root = "/home/" + os.environ.get('USER') + config["UserModelRoot"]
+            elif config["DefaultRoot"] == "$SYSTEM":
+                self.caffe_root = config["SystemRoot"][config["DefaultBranch"]]["Location"]
+                self.model_root = config["SystemModelRoot"]
+
+            if config["DefaultDatasetRoot"] == "$USER":
+                self.dataset_root = "/home/" + os.environ.get('USER') + config["UserDatasetRoot"]
+            elif config["DefaultDatasetRoot"] == "$SYSTEM":
+                self.dataset_root = config["SystemDatasetRoot"]
+
+            self.allowModelBranchSpecification = config["AllowModelBranchSpecification"]
+
+            print self.caffe_root
+            print self.allowModelBranchSpecification
+            print self.model_root
+            print self.dataset_root
+    def listModels(self, model_list_file=None, keywords=[], authors=[], showFields=["Model Name"], returnType=[]):
+        import json
+
+        if model_list_file == None:
+            model_list_file = 'caffe.models.json'
+
+        print "Trying to Read List of Models: " + model_list_file
+        with open(model_list_file) as model_list:
+            models = json.load(model_list)
+
+            print "Listing Models"
+            for sName, model in models.items():
+                print "Model (short name): " + sName
+
+                if "Model Name" in showFields:
+                    print "Model Name: " + model["Model Name"]
+
+                if "Paper Name" in showFields:
+                    print "Paper Name: " + model["Paper Name"]
+
+    """
+        find -- e.g. [Directory, Images, Original Images] will give you a list of normal image sets by Directory, Datasets
+
+        returns None, Directory, or Filename
+    """
+    def listDatasets(self, keywords=None, dataset_name=None, directory_name=None, file_name=None, directory_function=None):
+        import json
+
+        with open('caffe.datasets.json') as json_datasets:
+            datasets = json.load(json_datasets)
+
+            if dataset_name == None:
+                for key, value in datasets.items():
+                    print key
+            else:
+                if directory_name == None:
+                    print dataset_name
+                    for item in datasets[dataset_name]["Directories"]:
+                        if "Directory" in item and "Name" in item:
+                            print "\t- " + item["Name"][0] + "\t" + item["Directory"][0]
+                else:
+                    return datasets[dataset_name]["Directories"][directory_name]["Directory"]
+
+    def getFromDatasets(self, type="", functions=[], database_name="", name=None, returntype="directory"):
+        if type.lower() == "file":
+            return searchDatasetByFile(self, database_name, name, functions, returntype)
+        if type.lower() == "directory":
+            return searchDatasetByDirectory(self, database_name, name, functions, returntype)
+
+    def searchDatasetByFile(self, dataset_name="", name=None, functions=[], returntype="directory"):
+        import json
+
+        match = list()
+        with open('caffe.datasets.json') as json_datasets:
+            datasets = json.load(json_datasets)
+
+            if dataset_name == "":
+                for key, value in datasets.items():
+                    print "Dataset: " + key
+
+                    for directory in datasets[key]["Directories"]:
+                        if "Files" in directory:
+                            for fname, fitem in directory["Files"].items():
+                                if name != None and fname.lower() == name:
+                                    if returntype == "directory" and "Directory" in directory:
+                                        l = list()
+                                        for d in directory["Directory"]:
+                                            l.append(d + "/" + fname);
+
+                                        return l
+
+                                l = None
+                                if "Function" in fitem:
+                                    l = set(functions).intersection(fitem["Function"])
+
+                                if l != None and len(l) == len(functions):
+                                    print "\t- " + fname
+                                    if returntype == "directory" and "Directory" in directory:
+                                        for d in directory["Directory"]:
+                                            match.append(d + "/" + fname);
+            else:
+                for directory in datasets[dataset_name]["Directories"]:
+                    if "Files" in directory:
+                        for fname, fitem in directory["Files"].items():
+                            if name != None and fname.lower() == name:
+                                if returntype == "directory" and "Directory" in directory:
+                                    l = list()
+                                    for d in directory["Directory"]:
+                                        l.append(d + "/" + fname);
+
+                                    return l
+                            l = None
+                            if "Function" in fitem:
+                                l = set(functions).intersection(fitem["Function"])
+
+                            if l != None and len(l) == len(functions):
+                                print "\t- " + fname
+                                if returntype == "directory" and "Directory" in directory:
+                                    for d in directory["Directory"]:
+                                        match.append(d + "/" + fname);
+
+        return match
+    def searchDatasetByDirectory(self, dataset_name="", name=[], functions=[], returntype="directory"):
+        import json
+
+        match = list()
+        with open('caffe.datasets.json') as json_datasets:
+            datasets = json.load(json_datasets)
+
+            if dataset_name == "":
+                for key, value in datasets.items():
+                    print "Dataset: " + key
+
+                    for directory in datasets[key]["Directories"]:
+                        if name != None and "Name" in directory and len(set(name).intersection(directory["Name"])) >= 1:
+                            if returntype == "directory" and "Directory" in directory:
+                                return directory["Directory"]
+                            else:
+                                return [key, directory]
+
+                        l = None
+                        if "Function" in directory:
+                            l = set(functions).intersection(directory["Function"])
+
+                        if l != None and len(l) == len(functions) and "Name" in directory:
+                            print "\t- " + directory["Name"][0]
+                            if returntype == "directory" and "Directory" in directory:
+                                match.append(directory["Directory"])
+                            else:
+                                match.append([key, directory])
+            else:
+                for directory in datasets[dataset_name]["Directories"]:
+                    if name != None and "Name" in directory and len(set(name).intersection(directory["Name"])) >= 1:
+                        if returntype == "directory" and "Directory" in directory:
+                            return directory["Directory"]
+                        else:
+                            return [dataset_name, directory]
+
+                    l = None
+                    if "Function" in directory:
+                        l = set(functions).intersection(directory["Function"])
+
+                    if l != None and len(l) == len(functions) and "Name" in directory:
+                        print "\t- " + directory["Name"][0]
+                        if returntype == "directory" and "Directory" in directory:
+                            match.append(directory["Directory"])
+                        else:
+                            match.append([key, directory])
+
+        return match
+
     def use_gpu(self):
         if self.allow_gpu:
             caffe.set_mode_gpu()
@@ -48,7 +234,7 @@ class MDL:
         self.mean = mean
 
     def load_data(self):
-        print "Loading data"
+        print "Loading data E"
         self.data = "/srv/datasets/mscoco/test2014/COCO_test2014_000000000001.jpg"
 
     #modified from https://github.com/BVLC/caffe/issues/1698#issuecomment-70211045
@@ -73,7 +259,7 @@ class MDL:
             for in_idx, in_ in enumerate(inputs):
                 print "", in_idx, " " + in_
                 nim = Image.open(in_).resize((400, 400), Image.ANTIALIAS).convert(imformat)
-                im = np.array(nim)
+                im = np.array(nim, dtype=np.float)
                 print im.shape
                 if len( im.shape ) > 0:
                     if imformat is "RGB":
@@ -92,8 +278,25 @@ class MDL:
                     print im
         in_db.close()
 
-    def set_model_files(self, gist_id):
+    """
+    Set Gist ID to Download Files From
+    """
+    def set_gist(self, gist_id):
         print "not implemented"
+    def download_gist(self):
+        from subprocess import call
+
+        "download gist"
+        if self.gist_id is not None:
+            call([self.caffe_root + "/scripts/download_model_from_gist.sh", self.gist_id])
+            call(["mv", self.caffe_root + "/models/" + self.gist_id, self.model_root + self.model_dir])
+
+    def download_weights(self):
+        from subprocess import call
+
+
+        call(["python", self.caffe_root + "/scripts/download_model_binary.py",
+                self.caffe_root + self.model_root])
 
     def set_model_files(self, model_root, deploy_file, solve_file, pretrained_file):
         print "not implemented"
@@ -103,7 +306,7 @@ class MDL:
 
 	# from https://gist.github.com/shelhamer/91eece041c19ff8968ee#file-solve-py
 	# credit @longjon
-    def upsample_filter(size):
+    def upsample_filter(self, size):
         factor = (size + 1) // 2
         if size % 2 == 1:
             center = factor - 1
@@ -115,7 +318,7 @@ class MDL:
         return (1 - abs(og[0] - center) / factor) * (1 - abs(og[1] - center) / factor)
 
 	# from https://gist.github.com/shelhamer/91eece041c19ff8968ee#file-solve-py
-    def interp_surgery(net, layers):
+    def interp_surgery(self, net, layers):
         for l in layers:
             m, k, h, w = net.params[l][0].data.shape
             if m != k:
@@ -124,7 +327,7 @@ class MDL:
             if h != w:
                 print 'filters need to be square'
                 raise
-            fltr = upsample_filter(h)
+            fltr = self.upsample_filter(h)
             net.params[l][0].data[range(m), range(k), :, :] = fltr
 
     def configureForTest(self):
@@ -136,12 +339,12 @@ class MDL:
 
         self.net = caffe.Net(self.caffe_root + self.deploy_file, self.caffe_root + self.pretrained_file, caffe.TEST);
 
-        self.transformer = caffe.io.Transformer({'data': self.net.blobs['data'].data.shape})
-        self.transformer.set_transpose('data', (2,0,1))
-        self.transformer.set_raw_scale('data', 255)
-        self.transformer.set_channel_swap('data', (2,1,0))
-        if self.mean is not None:
-            self.transformer.set_mean('data', self.mean)
+        #self.transformer = caffe.io.Transformer({'data': self.net.blobs['data'].data.shape})
+        #self.transformer.set_transpose('data', (2,0,1))
+        #self.transformer.set_raw_scale('data', 255)
+        #self.transformer.set_channel_swap('data', (2,1,0))
+        #if self.mean is not None:
+        #    self.transformer.set_mean('data', self.mean)
 
     def configureForTrain(self):
         #plt.rcParams['figure.figsize'] = (10, 10)
@@ -150,39 +353,57 @@ class MDL:
 
         self.use_cpu()
 
-        base_weights = self.caffe_root + self.pretrained_file
-        solver = caffe.SGDSolver(self.solve_file)
+        self.base_weights = self.caffe_root + self.pretrained_file
+        self.solver = caffe.SGDSolver(self.caffe_root + self.solve_file)
 
     def runTest(self, image):
         self.net.blobs['data'].reshape(self.data_dim[0],self.data_dim[1],self.data_dim[2],self.data_dim[3])
         self.net.blobs['data'].data[...] = self.transformer.preprocess('data', caffe.io.load_image(image))
 
         self.out = self.net.forward();
-    def runTestBatch(self, data_dir, nmax=1):
+    def runTestBatch(self, data_dir, nmax=1, op=""):
+        print "Running Tests"
         from os import listdir
         from os.path import isfile, join
+        from PIL import Image
         k = [ f for f in listdir(data_dir) if isfile(join(data_dir,f)) ]
 
         i = 0
         while i < nmax:
             print k[i]
-            self.runTest(data_dir + k[i])
+            if op is "fcn":
+                image = Image.open(data_dir + k[i])
+                in_ = np.array(image, dtype=np.float32)
+                in_ = in_[:,:,::-1]
+                in_ -= np.array(self.mean)
+                in_ = in_.transpose((2,0,1))
+                self.net.blobs['data'].reshape(1, *in_.shape)
+                self.net.blobs['data'].data[...] = in_
+                self.out = self.net.forward()
+            elif op is '':
+                self.runTest(data_dir + k[i])
+            else:
+                print "Unrecognized command \"op=" + op + "\""
             self.visualizeLayers(k[i])
+            self.visualizeOutput(k[i], blob_name='score')
+            #self.visualizeOutput(k[i], blob_name='upscore')
+            #self.visualizeOutput(k[i], blob_name='bigscore')
+            #self.visualizeOutput(k[i], blob_name='pool5')
             i = i + 1
 
-        print "Not Implemented"
+        print "End of Testing"
 
     def runTrainS(self, step_count):
         print "Training"
         cpath = os.getcwd()
         os.chdir(self.caffe_root + self.model_dir)
         self.solver = caffe.SGDSolver(self.caffe_root + self.solve_file)
-        #interp_layers = [k for k in self.solver.net.params.keys() if 'up' in k]
-        #interp_surgery(self.solver.net, #interp_layers)
+        interp_layers = [k for k in self.solver.net.params.keys() if 'up' in k]
+        self.interp_surgery(self.solver.net, interp_layers)
 
-        #self.solver.net.copy_from(base_weights)
+        self.solver.net.copy_from(self.base_weights)
 
-        #self.solver.step(step_count)
+        self.solver.step(step_count)
         os.chdir(cpath)
 
     def vis_square(self, data, padsize=1, padval=0):
@@ -198,6 +419,11 @@ class MDL:
 
         return data
 
+    def visualizeOutput(self, save_prefix="output", blob_name=None):
+        if blob_name is not None:
+            f = self.net.blobs[blob_name].data[0].argmax(axis=0)
+            if len(f.shape) == 2:
+                plt.imsave(fname=self.caffe_root + "output/"+save_prefix+"_"+blob_name+"."+self.default_image_format, arr=f, format=self.default_image_format)
     def visualizeLayers(self, save_prefix=""):
         for k, v in self.net.blobs.items():
             if (k[0] is not 'f' or k[1] is not 'c') and (k[0] is not 'p' or k[1] is not 'r'):
@@ -205,10 +431,15 @@ class MDL:
                 fig = self.vis_square(f, padval=1)
                 plt.imsave(fname="output/" + save_prefix + "_" + k + "." + self.default_image_format, arr=fig, format=self.default_image_format)
 
-    def visualizeLayers_conv(self, filename, data):
+    def visualizeLayersS(self, save_prefix=""):
+        print "Not Implemented"
+
+    def visualizeLayers_conv(self, filename, data, layout="single"):
         print "Not implemented"
-    def visualizeLayers_pool(self, filename, data):
+
+    def visualizeLayers_pool(self, filename, data, layout="single"):
         print "Not implemented"
+
     def visualizeLayers_relu(self, filename, data):
         print "Not implemented"
 
@@ -223,41 +454,67 @@ class MDL:
         print "Visualizing Filters"
 
 
-def FCN_32s():
-	model = MDL(caffe_root="/home/chriswc/dev/caffe/",data_location="/home/chriswc/VOCdevkit2010/VOC2010/JPEGImages/",deploy_file="models/FCN_32s_PASCAL/deploy.prototxt",pretrained_file="models/FCN_32s_PASCAL/pretrained.caffemodel", model_dir="models/FCN_32s_PASCAL/")
+def FCN_32s_Test():
+        print "Running FCN 32s"
+	model = MDL(caffe_root="/home/chriswc/dev/caffe/",
+                data_location="/home/chriswc/VOCdevkit2010/VOC2010/JPEGImages/",
+                deploy_file="models/FCN_32s_PASCAL/deploy.prototxt",
+                pretrained_file="models/FCN_32s_PASCAL/pretrained.caffemodel",
+                model_dir="models/FCN_32s_PASCAL/")
 	model.configureForTest()
 
 	model.data_dim = [1,3,500,500]
-	model.load_data()
+	#model.load_data()
 	model.set_mean([104.00698793, 116.66876762, 122.67891434])
 	#model.use_gpu()
-	model.runTestBatch(model.data_location, 1)
-
-	#model.visualizeLayers()
-	model.visualizeFilters()
-	#plt.imshow(model.out['upscore'][0, 20])
-	return model
-
-def FCN_8s_Context(genDB=False):
-    model = MDL(caffe_root="/home/chriswc/dev/caffe/",data_location="/home/chriswc/VOCdevkit2010/VOC2010/",solve_file="models/FCN_8s_PASCAL_CONTEXT/solver.prototxt", deploy_file="models/FCN_8s_PASCAL_CONTEXT/deploy.prototxt",pretrained_file="models/FCN_8s_PASCAL_CONTEXT/pretrained.caffemodel", model_dir="models/FCN_8s_PASCAL_CONTEXT/")
-    #model.configureForTest()
-    path = os.getcwd()
-    os.chdir(model.caffe_root + model.model_dir)
-    model.data_dim = [1,3,500,500]
-	#model.load_data()
-    model.set_mean([104.00698793, 116.66876762, 122.67891434])
-    model.use_gpu()
-	#model.runTestBatch(model.data_location, 1)
-
+	model.runTestBatch(model.data_location, 20, op="fcn")
+        model.visualizeOutput(blob_name='score')
 	#model.visualizeLayers()
 	#model.visualizeFilters()
 	#plt.imshow(model.out['upscore'][0, 20])
+	return model
+def FCN_8s_CTest():
+        print "Running FCN 32s"
+	model = MDL(caffe_root="/home/chriswc/dev/caffe/",
+                data_location="/home/chriswc/VOCdevkit2010/VOC2010/JPEGImages/",
+                deploy_file="models/FCN_8s_PASCAL_CONTEXT/deploy.prototxt",
+                pretrained_file="models/FCN_8s_PASCAL_CONTEXT/fcn-8s-pascalcontext.caffemodel",
+                model_dir="models/FCN_8s_PASCAL_CONTEXT/")
+
+	model.configureForTest()
+
+	model.data_dim = [1,3,500,500]
+	#model.load_data()
+	model.set_mean((104.00698793, 116.66876762, 122.67891434))
+	#model.use_gpu()
+	model.runTestBatch(model.data_location, 20, op="fcn")
+        model.visualizeOutput(blob_name='score')
+	#model.visualizeLayers()
+	#model.visualizeFilters()
+	#plt.imshow(model.out['upscore'][0, 20])
+	return model
+
+def FCN_8s_Context(genDB=False, useGPU=False):
+    model = MDL(caffe_root="/home/chriswc/dev/caffe/",
+            data_location="/home/chriswc/VOCdevkit2010/VOC2010/",
+            solve_file="models/FCN_8s_PASCAL_CONTEXT/solver.prototxt",
+            deploy_file="models/FCN_8s_PASCAL_CONTEXT/deploy.prototxt",
+            pretrained_file="models/FCN_8s_PASCAL_CONTEXT/pretrained.caffemodel",
+            model_dir="models/FCN_8s_PASCAL_CONTEXT/")
+    os.chdir(model.caffe_root + model.model_dir)
+    model.configureForTrain()
+    path = os.getcwd()
+    model.data_dim = [1,3,500,500]
+
+    model.set_mean([104.00698793, 116.66876762, 122.67891434])
+    if useGB is True:
+        model.use_cpu()
 
     if genDB is True:
         model.loadData_asLmdb(file_listing="/home/chriswc/VOCdevkit2010/VOC2010/ImageSets/Segmentation/train.txt", data_folder="JPEGImages/", lmdb_name="input-lmdb", imformat="RGB")
         model.loadData_asLmdb(file_listing="/home/chriswc/VOCdevkit2010/VOC2010/ImageSets/Segmentation/train.txt", data_folder="SegmentationClass/", lmdb_name="output-lmdb", imformat="L")
-        #model.loadData_asLmdb(file_listing="/home/chriswc/VOCdevkit2010/VOC2010/ImageSets/Segmentation/val.txt", data_folder="JPEGImages/", lmdb_name="input-val-lmdb")
-        #model.loadData_asLmdb(file_listing="/home/chriswc/VOCdevkit2010/VOC2010/ImageSets/Segmentation/val.txt", data_folder="SegmentationClass/", lmdb_name="output-val-lmdb")
+        model.loadData_asLmdb(file_listing="/home/chriswc/VOCdevkit2010/VOC2010/ImageSets/Segmentation/val.txt", data_folder="JPEGImages/", lmdb_name="input-val-lmdb", imformat="RGB")
+        model.loadData_asLmdb(file_listing="/home/chriswc/VOCdevkit2010/VOC2010/ImageSets/Segmentation/val.txt", data_folder="SegmentationClass/", lmdb_name="output-val-lmdb", imformat="L")
 
     print "Finished Loading Data. Now running training"
     model.runTrainS(1000)
@@ -266,7 +523,11 @@ def FCN_8s_Context(genDB=False):
     os.chdir(path)
     return model
 def SOS_ALEXNET():
-	model = MDL(caffe_root="/home/chriswc/dev/caffe/", data_location="srv/datasets/mscoco/test2014/", deploy_file="models/ALEXNET_CNN_SOS/deploy.prototxt", pretrained_file="models/ALEXNET_CNN_SOS/pretrained.caffemodel")
+	model = MDL(caffe_root="/home/chriswc/dev/caffe/",
+                data_location="srv/datasets/mscoco/test2014/",
+                deploy_file="models/ALEXNET_CNN_SOS/deploy.prototxt",
+                pretrained_file="models/ALEXNET_CNN_SOS/pretrained.caffemodel")
+
 	model.set_mean( np.load(model.caffe_root + '/python/caffe/imagenet/ilsvrc_2012_mean.npy').mean(1).mean(1) )
 	model.configureForTest()
 
