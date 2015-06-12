@@ -77,24 +77,32 @@ CMD=`which easy_install`
 echo $CMD
 sudo $CMD protobuf
 
-sudo mkdir -p /srv/datasets/pascal/compressed/
+PSCL_CMP_DIR=/srv/datasets/pascal/compressed
+PSCL_DIR=/srv/datasets/pascal
+
+sudo mkdir -p $PSCL_CMP_DIR
+sudo mkdir -p $PSCL_DIR
 #PASCAL VOC 2005
 #URL: http://host.robots.ox.ac.uk/pascal/VOC/voc2005/index.html
 
 #DATASET 1
 #INFORMATION: http://host.robots.ox.ac.uk/pascal/VOC/databases.html#VOC2005_1
 #DATABASE URL: http://www.pascal-network.org/challenges/VOC/databases.html
-if [ ! -f /srv/datasets/pascal/compressed/voc2005_1.tar.gz ]; then
-	sudo wget -P /srv/datasets/pascal/compressed/ http://host.robots.ox.ac.uk/pascal/VOC/download/voc2005_1.tar.gz
+if [ ! -f $PSCL_CMP_DIR/voc2005_1.tar.gz ]; then
+	sudo wget -P $PSCL_CMP_DIR/ http://host.robots.ox.ac.uk/pascal/VOC/download/voc2005_1.tar.gz
 fi
-
+if [ -f $PSCL_CMP_DIR/voc2005_1.tar.gz  ]; then
+	sudo tar -xvf -k $PSCL_CMP_DIR/voc2005_1.tar.gz  -C $PSCL_DIR
+fi
 #DATASET 2
 #INFORMATION: http://host.robots.ox.ac.uk/pascal/VOC/databases.html#VOC2005_2
 #DATABASE URL: http://www.pascal-network.org/challenges/VOC/databases.html
-if [ ! -f /srv/datasets/pascal/compressed/voc2005_2.tar.gz ]; then
-	sudo wget -P /srv/datasets/pascal/compressed/ http://host.robots.ox.ac.uk/pascal/VOC/download/voc2005_2.tar.gz
+if [ ! -f $PSCL_CMP_DIR/voc2005_2.tar.gz ]; then
+	sudo wget -P $PSCL_CMP_DIR/ http://host.robots.ox.ac.uk/pascal/VOC/download/voc2005_2.tar.gz
 fi
-
+if [ -f $PSCL_CMP_DIR/voc2005_2.tar.gz  ]; then
+	sudo tar -xvf -k $PSCL_CMP_DIR/voc2005_2.tar.gz  -C $PSCL_DIR
+fi
 #PASCAL VOC 2006
 #URL: http://host.robots.ox.ac.uk/pascal/VOC/voc2006/index.html
 
@@ -102,12 +110,16 @@ fi
 if [ ! -f /srv/datasets/pascal/compressed/voc2006_trainval.tar ]; then
 	sudo wget -P /srv/datasets/pascal/compressed/ http://host.robots.ox.ac.uk/pascal/VOC/download/voc2006_trainval.tar
 fi
-
+if [ -f $PSCL_CMP_DIR/voc2006_trainval.tar  ]; then
+	sudo tar -xvf -k $PSCL_CMP_DIR/voc2006_trainval.tar  -C $PSCL_DIR
+fi
 #DATASET, test set
 if [ ! -f /srv/datasets/pascal/compressed/voc2006_test.tar ]; then
 	sudo wget -P /srv/datasets/pascal/compressed/ http://host.robots.ox.ac.uk/pascal/VOC/download/voc2006_test.tar
 fi
-
+if [ -f $PSCL_CMP_DIR/voc2006_test.tar ]; then
+	sudo tar -xvf -k $PSCL_CMP_DIR/voc2006_test.tar -C $PSCL_DIR
+fi
 #PASCAL VOC 2007
 #URL: http://host.robots.ox.ac.uk/pascal/VOC/voc2007/index.html
 
@@ -115,15 +127,22 @@ fi
 if [ ! -f /srv/datasets/pascal/compressed/VOCtrainval_06-Nov-2007.tar ]; then
 	sudo wget -P /srv/datasets/pascal/compressed/ http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
 fi
-
+if [ -f $PSCL_CMP_DIR/VOCtrainval_06-Nov-2007.tar ]; then
+	sudo tar -xvf -k $PSCL_CMP_DIR/VOCtrainval_06-Nov-2007.tar -C $PSCL_DIR
+fi
 #DATASET test
-if [ ! -f /srv/datasets/pascal/compressed/OCtest_06-Nov-2007.tar ]; then
+if [ ! -f /srv/datasets/pascal/compressed/VOCtest_06-Nov-2007.tar ]; then
 	sudo wget -P /srv/datasets/pascal/compressed/ http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
+fi
+if [ -f $PSCL_CMP_DIR/VOCtest_06-Nov-2007.tar ]; then
+	sudo tar -xvf -k $PSCL_CMP_DIR/VOCtest_06-Nov-2007.tar -C $PSCL_DIR
 fi
 if [ ! -f /srv/datasets/pascal/compressed/VOCtestnoimgs_06-Nov-2007.tar ]; then
 	sudo wget -P /srv/datasets/pascal/compressed/ http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtestnoimgs_06-Nov-2007.tar
 fi
-
+if [ -f $PSCL_CMP_DIR/VOCtestnoimgs_06-Nov-2007.tar ]; then
+	sudo tar -xvf -k $PSCL_CMP_DIR/VOCtestnoimgs_06-Nov-2007.tar -C $PSCL_DIR
+fi
 #PASCAL VOC 2008
 #URL: http://host.robots.ox.ac.uk/pascal/VOC/voc2008/index.html
 
@@ -131,7 +150,9 @@ fi
 if [ ! -f /srv/datasets/pascal/compressed/VOCtrainval_14-Jul-2008.tar ]; then
 	sudo wget -P /srv/datasets/pascal/compressed/ http://host.robots.ox.ac.uk/pascal/VOC/voc2008/VOCtrainval_14-Jul-2008.tar
 fi
-
+if [ -f $PSCL_CMP_DIR/VOCtrainval_14-Jul-2008.tar ]; then
+	sudo tar -xvf -k $PSCL_CMP_DIR/VOCtrainval_14-Jul-2008.tar -C $PSCL_DIR
+fi
 #PASCAL VOC 2009
 #URL: http://host.robots.ox.ac.uk/pascal/VOC/voc2009/index.html
 
@@ -139,7 +160,9 @@ fi
 if [ ! -f /srv/datasets/pascal/compressed/VOCtrainval_11-May-2009.tar ]; then
 	sudo wget -P /srv/datasets/pascal/compressed/ http://host.robots.ox.ac.uk/pascal/VOC/voc2009/VOCtrainval_11-May-2009.tar
 fi
-
+if [ -f $PSCL_CMP_DIR/VOCtrainval_11-May-2009.tar ]; then
+	sudo tar -xvf -k $PSCL_CMP_DIR/VOCtrainval_11-May-2009.tar -C $PSCL_DIR
+fi
 #PASCAL VOC 2010
 #URL: http://host.robots.ox.ac.uk/pascal/VOC/voc2010/index.html
 
@@ -147,7 +170,9 @@ fi
 if [ ! -f /srv/datasets/pascal/compressed/VOCtrainval_03-May-2010.tar ]; then
 	sudo wget -P /srv/datasets/pascal/compressed/ http://host.robots.ox.ac.uk/pascal/VOC/voc2010/VOCtrainval_03-May-2010.tar
 fi
-
+if [ -f $PSCL_CMP_DIR/VOCtrainval_03-May-2010.tar ]; then
+	sudo tar -xvf -k $PSCL_CMP_DIR/VOCtrainval_03-May-2010.tar -C $PSCL_DIR
+fi
 #PASCAL VOC 2011
 #URL: http://host.robots.ox.ac.uk/pascal/VOC/voc2011/index.html
 
@@ -156,17 +181,27 @@ if [ ! -f /srv/datasets/pascal/compressed/VOCtrainval_25-May-2011.tar ]; then
 	sudo wget -P /srv/datasets/pascal/compressed/ http://host.robots.ox.ac.uk/pascal/VOC/voc2011/VOCtrainval_25-May-2011.tar
 fi
 
+if [ -f $PSCL_CMP_DIR/VOCtrainval_25-May-2011.tar ] && [ ! -d $PSCL_DIR/TrainVal ]; then
+	sudo tar -xvf -k $PSCL_CMP_DIR/VOCtrainval_25-May-2011.tar -C $PSCL_DIR
+fi
+
 #PASCAL VOC 2012
 #URL: http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html
 
 #DATASET, TRAINING/VALIDATION
-if [ ! -f /srv/datasets/pascal/compressed/VOCtrainval_11-May-2012.tar ]; then
+if [ ! -f $PSCL_CMP_DIR/VOCtrainval_11-May-2012.tar ]; then
 	sudo wget -P /srv/datasets/pascal/compressed/ http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
+fi
+
+if [ -f $PSCL_CMP_DIR/VOCtrainval_11-May-2012.tar ] && [ ! -d $PSCL_DIR/VOCdevkit/VOC2012 ]; then
+	sudo tar -xvf -k $PSCL_CMP_DIR/VOCtrainval_11-May-2012.tar -C $PSCL_DIR
 fi
 
 #MSCOCO
 MSCOCO_CMP_DIR=/srv/datasets/mscoco/compressed
+MSCOCO_DIR=/srv/datasets/mscoco
 mkdir -p $MSCOCO_CMP_DIR/
+mkdir -p $MSCOCO_DIR/
 
 #TOOLS
 if [ ! -d ~/dev/coco ]; then
@@ -177,16 +212,19 @@ fi
 if [ ! -f $MSCOCO_CMP_DIR/train2014.zip ]; then
 	sudo wget -P $MSCOCO_CMP_DIR http://msvocds.blob.core.windows.net/coco2014/train2014.zip
 fi
+sudo unzip -n $MSCOCO_CMP_DIR/train2014.zip -d $MSCOCO_DIR/
 
 #IMAGE DATASETS, VALIDATION IMAGES
 if [ ! -f $MSCOCO_CMP_DIR/val2014.zip ]; then
 	sudo wget -P $MSCOCO_CMP_DIR http://msvocds.blob.core.windows.net/coco2014/val2014.zip
 fi
+sudo unzip -n $MSCOCO_CMP_DIR/val2014.zip -d $MSCOCO_DIR
 
 #IMAGE DATASETS, TEST IMAGES
 if [ ! -f $MSCOCO_CMP_DIR/test2014.zip ]; then
 	sudo wget -P $MSCOCO_CMP_DIR http://msvocds.blob.core.windows.net/coco2014/test2014.zip
 fi
+sudo unzip -n $MSCOCO_CMP_DIR/test2014.zip -d $MSCOCO_DIR
 
 #ANNOTATIONS, TRAINING ANNOTATIONS
 if [ ! -f $MSCOCO_CMP_DIR/instances_train2014.json ]; then
@@ -202,7 +240,9 @@ fi
 if [ ! -f $MSCOCO_CMP_DIR/captions_train2014.json ]; then
 	sudo wget -P $MSCOCO_CMP_DIR http://msvocds.blob.core.windows.net/annotations-1-0-2/captions_train2014.json
 fi
+
 #ANNOTATIONS, VALIDATION CAPTIONS
 if [ ! -f $MSCOCO_CMP_DIR/captions_val2014.json ]; then
 	sudo wget -P $MSCOCO_CMP_DIR http://msvocds.blob.core.windows.net/annotations-1-0-2/captions_val2014.json
 fi
+
