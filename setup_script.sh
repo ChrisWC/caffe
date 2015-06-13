@@ -76,6 +76,7 @@ fi
 CMD=`which easy_install`
 echo $CMD
 sudo $CMD protobuf
+sudo $CMD lmdb
 
 PSCL_CMP_DIR=/srv/datasets/pascal/compressed
 PSCL_DIR=/srv/datasets/pascal

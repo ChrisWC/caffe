@@ -12,7 +12,7 @@ FCN_8s_PASCAL_CONTEXT=91eece041c19ff8968ee
 
 DIRECTORY=models/FCN_16s_PASCAL
 if [ ! -d "$DIRECTORY" ]; then
-	./scripts/download_ model_from_gist.sh $FCN_32s_PASCAL
+	./scripts/download_model_from_gist.sh $FCN_32s_PASCAL
 	./scripts/download_model_binary.py models/$FCN_32s_PASCAL
 
 	mv models/$FCN_32s_PASCAL models/FCN_32s_PASCAL

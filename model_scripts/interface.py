@@ -41,7 +41,43 @@ class MDL:
         self.gist_id = gist_id
         self.allowModelBranchSpecification = True
 
-    def setToDefault(self, config_file=None):
+    def loadModel(self, modelConfigFile, outputConfig=False, run=True):
+        import json
+        import os
+
+        with open(modelConfigFile) as modelConfig:
+            model = json.load(modelConfig)
+
+            """load info"""
+            self.name = model["Model Name"]
+            self.short_name = model["Short Name"]
+            self.model_authors = model["Model Author"]
+            self.paper_authors = model["Paper Author"]
+
+            """search for directory"""
+            self.model_directory_name = os.environ.get(model["Directory Path"][0]["Prefix"]) + model["Directory Path"][0]["Directory"] + model["Directory Name"]
+            os.path.isdir(self.model_directory_name)
+
+            """load default dataset info, search for info"""
+            self.dataset_locations = list()
+
+
+
+            """load in pipeline (check that files exsist"""
+
+            """ouput data"""
+            if outputConfig:
+                """output"""
+                print "Loading Model: " + self.name + "(" + self.short_name + ")"
+                print "as defined in: " + self.paper
+
+            """download files if necessary"""
+
+            """Run Model"""
+            if run:
+                """run"""
+
+    def setCaffeDefaults(self, config_file=None):
         import json
         import os
 
@@ -294,7 +330,6 @@ class MDL:
     def download_weights(self):
         from subprocess import call
 
-
         call(["python", self.caffe_root + "/scripts/download_model_binary.py",
                 self.caffe_root + self.model_root])
 
@@ -304,8 +339,8 @@ class MDL:
         self.deploy_file = "/models/" + gist_id + "/fcn-32s-pascal-deploy.prototxt"
         self.pretrained_file = "/models/" + gist_id + "/fcn-32s-pascal.caffemodel"
 
-	# from https://gist.github.com/shelhamer/91eece041c19ff8968ee#file-solve-py
-	# credit @longjon
+    # from https://gist.github.com/shelhamer/91eece041c19ff8968ee#file-solve-py
+    # credit @longjon
     def upsample_filter(self, size):
         factor = (size + 1) // 2
         if size % 2 == 1:
@@ -317,7 +352,7 @@ class MDL:
 
         return (1 - abs(og[0] - center) / factor) * (1 - abs(og[1] - center) / factor)
 
-	# from https://gist.github.com/shelhamer/91eece041c19ff8968ee#file-solve-py
+    # from https://gist.github.com/shelhamer/91eece041c19ff8968ee#file-solve-py
     def interp_surgery(self, net, layers):
         for l in layers:
             m, k, h, w = net.params[l][0].data.shape
@@ -337,6 +372,8 @@ class MDL:
 
         self.use_cpu()
 
+        print self.caffe_root + self.deploy_file
+        print self.caffe_root + self.pretrained_file
         self.net = caffe.Net(self.caffe_root + self.deploy_file, self.caffe_root + self.pretrained_file, caffe.TEST);
 
         #self.transformer = caffe.io.Transformer({'data': self.net.blobs['data'].data.shape})
@@ -353,6 +390,8 @@ class MDL:
 
         self.use_cpu()
 
+        print self.caffe_root + self.pretrained_file
+        print self.caffe_root + self.solve_file
         self.base_weights = self.caffe_root + self.pretrained_file
         self.solver = caffe.SGDSolver(self.caffe_root + self.solve_file)
 
@@ -452,89 +491,3 @@ class MDL:
                 plt.imsave(fname="output/" + "filter_" + k + "." + self.default_image_format, arr=fig, format=self.default_image_format);
 
         print "Visualizing Filters"
-
-
-def FCN_32s_Test():
-        print "Running FCN 32s"
-	model = MDL(caffe_root="/home/chriswc/dev/caffe/",
-                data_location="/home/chriswc/VOCdevkit2010/VOC2010/JPEGImages/",
-                deploy_file="models/FCN_32s_PASCAL/deploy.prototxt",
-                pretrained_file="models/FCN_32s_PASCAL/pretrained.caffemodel",
-                model_dir="models/FCN_32s_PASCAL/")
-	model.configureForTest()
-
-	model.data_dim = [1,3,500,500]
-	#model.load_data()
-	model.set_mean([104.00698793, 116.66876762, 122.67891434])
-	#model.use_gpu()
-	model.runTestBatch(model.data_location, 20, op="fcn")
-        model.visualizeOutput(blob_name='score')
-	#model.visualizeLayers()
-	#model.visualizeFilters()
-	#plt.imshow(model.out['upscore'][0, 20])
-	return model
-def FCN_8s_CTest():
-        print "Running FCN 32s"
-	model = MDL(caffe_root="/home/chriswc/dev/caffe/",
-                data_location="/home/chriswc/VOCdevkit2010/VOC2010/JPEGImages/",
-                deploy_file="models/FCN_8s_PASCAL_CONTEXT/deploy.prototxt",
-                pretrained_file="models/FCN_8s_PASCAL_CONTEXT/fcn-8s-pascalcontext.caffemodel",
-                model_dir="models/FCN_8s_PASCAL_CONTEXT/")
-
-	model.configureForTest()
-
-	model.data_dim = [1,3,500,500]
-	#model.load_data()
-	model.set_mean((104.00698793, 116.66876762, 122.67891434))
-	#model.use_gpu()
-	model.runTestBatch(model.data_location, 20, op="fcn")
-        model.visualizeOutput(blob_name='score')
-	#model.visualizeLayers()
-	#model.visualizeFilters()
-	#plt.imshow(model.out['upscore'][0, 20])
-	return model
-
-def FCN_8s_Context(genDB=False, useGPU=False):
-    model = MDL(caffe_root="/home/chriswc/dev/caffe/",
-            data_location="/home/chriswc/VOCdevkit2010/VOC2010/",
-            solve_file="models/FCN_8s_PASCAL_CONTEXT/solver.prototxt",
-            deploy_file="models/FCN_8s_PASCAL_CONTEXT/deploy.prototxt",
-            pretrained_file="models/FCN_8s_PASCAL_CONTEXT/pretrained.caffemodel",
-            model_dir="models/FCN_8s_PASCAL_CONTEXT/")
-    os.chdir(model.caffe_root + model.model_dir)
-    model.configureForTrain()
-    path = os.getcwd()
-    model.data_dim = [1,3,500,500]
-
-    model.set_mean([104.00698793, 116.66876762, 122.67891434])
-    if useGB is True:
-        model.use_cpu()
-
-    if genDB is True:
-        model.loadData_asLmdb(file_listing="/home/chriswc/VOCdevkit2010/VOC2010/ImageSets/Segmentation/train.txt", data_folder="JPEGImages/", lmdb_name="input-lmdb", imformat="RGB")
-        model.loadData_asLmdb(file_listing="/home/chriswc/VOCdevkit2010/VOC2010/ImageSets/Segmentation/train.txt", data_folder="SegmentationClass/", lmdb_name="output-lmdb", imformat="L")
-        model.loadData_asLmdb(file_listing="/home/chriswc/VOCdevkit2010/VOC2010/ImageSets/Segmentation/val.txt", data_folder="JPEGImages/", lmdb_name="input-val-lmdb", imformat="RGB")
-        model.loadData_asLmdb(file_listing="/home/chriswc/VOCdevkit2010/VOC2010/ImageSets/Segmentation/val.txt", data_folder="SegmentationClass/", lmdb_name="output-val-lmdb", imformat="L")
-
-    print "Finished Loading Data. Now running training"
-    model.runTrainS(1000)
-
-    print "Completed Training"
-    os.chdir(path)
-    return model
-def SOS_ALEXNET():
-	model = MDL(caffe_root="/home/chriswc/dev/caffe/",
-                data_location="srv/datasets/mscoco/test2014/",
-                deploy_file="models/ALEXNET_CNN_SOS/deploy.prototxt",
-                pretrained_file="models/ALEXNET_CNN_SOS/pretrained.caffemodel")
-
-	model.set_mean( np.load(model.caffe_root + '/python/caffe/imagenet/ilsvrc_2012_mean.npy').mean(1).mean(1) )
-	model.configureForTest()
-
-	model.data_dim = [1,3,227,227]
-	model.load_data()
-	model.use_gpu()
-	model.runTestBatch("/srv/datasets/mscoco/test2014/", 1)
-
-	model.visualizeFilters()
-	return model
