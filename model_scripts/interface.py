@@ -2,15 +2,15 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-
+import caffe
 class MDL:
     def __init__(self,
-                caffe_root="~/dev/caffe",
-                data_location="/srv/datasets",
-                deploy_file="",
-                solve_file="",
-                pretrained_file="",
-                output_dir="~/dev/caffe/out",
+                caffe_root=None,
+                data_location=None,
+                deploy_file=None,
+                solve_file=None,
+                pretrained_file=None,
+                output_dir=None,
                 model_root=None,
                 model_dir=None,
                 gist_id=None):
@@ -31,15 +31,15 @@ class MDL:
         self.data_dim = [1,3,227,227]
         self.dataset_root = None
 
-        import sys
-        sys.path.insert(0, caffe_root + '/python')
-        global caffe
-        import caffe
-
         self.transformer = None
         self.model_dir= model_dir
         self.gist_id = gist_id
         self.allowModelBranchSpecification = True
+        self.setCaffeDefaults()
+        import sys
+        #sys.path.insert(0, self.caffe_root + '/python')
+        #global caffe
+        #import caffe
 
     def loadModel(self, modelConfigFile, outputConfig=False, run=True):
         import json
@@ -55,13 +55,17 @@ class MDL:
             self.paper_authors = model["Paper Author"]
 
             """search for directory"""
-            self.model_directory_name = os.environ.get(model["Directory Path"][0]["Prefix"]) + model["Directory Path"][0]["Directory"] + model["Directory Name"]
-            os.path.isdir(self.model_directory_name)
+            self.model_dir = os.getenv(model["Directory Path"][0]["Prefix"], "") + model["Directory Path"][0]["Directory"] + model["Directory Name"][0]
+            os.path.isdir(self.model_dir)
 
             """load default dataset info, search for info"""
             self.dataset_locations = list()
-
-
+            #self.data_location = self.getFromDatasets(type="directory", functions=["Input", "Testing"], database_name="PASCAL VOC 2010", name=["Input Images"])
+            """load file locations"""
+            if "deploy" in model["Files"]:
+                self.deploy_file = model["Files"]["deploy"]["Name"]
+            if "pretrained" in model["Files"]:
+                self.pretrained_file = model["Files"]["pretrained"]["Name"]
 
             """load in pipeline (check that files exsist"""
 
@@ -369,12 +373,18 @@ class MDL:
         #plt.rcParams['figure.figsize'] = (10, 10)
         #plt.rcParams['image.interpolation'] = 'nearest'
         #plt.rcParams['image.cmap'] = 'gray'
+        import os.path
 
         self.use_cpu()
+        deploy = self.caffe_root + "/" + self.model_dir + "/" + self.deploy_file
+        pretrained = self.caffe_root + "/" + self.model_dir + "/" + self.pretrained_file
+        print deploy
+        print pretrained
+        print os.path.isfile(deploy)
+        print os.path.isfile(pretrained)
 
-        print self.caffe_root + self.deploy_file
-        print self.caffe_root + self.pretrained_file
-        self.net = caffe.Net(self.caffe_root + self.deploy_file, self.caffe_root + self.pretrained_file, caffe.TEST);
+        """deploy = "/home/chrwc/dev/caffe/models/FCN_32s_PASCAL/deploy.prototxt" """
+        self.net = caffe.Net( deploy.encode("utf-8"), pretrained.encode("utf-8"), caffe.TEST)
 
         #self.transformer = caffe.io.Transformer({'data': self.net.blobs['data'].data.shape})
         #self.transformer.set_transpose('data', (2,0,1))
@@ -408,9 +418,17 @@ class MDL:
         k = [ f for f in listdir(data_dir) if isfile(join(data_dir,f)) ]
 
         i = 0
+        self.transformer = None
+
+        if op == "":
+            self.transformer = caffe.io.Transformer({'data': self.net.blobs['data'].data.shape})
+            self.transformer.set_transpose('data', (2,0,1))
+            self.transformer.set_raw_scale('data', 255)
+            self.transformer.set_channel_swap('data', (2,1,0))
+
         while i < nmax:
             print k[i]
-            if op is "fcn":
+            if op == "fcn":
                 image = Image.open(data_dir + k[i])
                 in_ = np.array(image, dtype=np.float32)
                 in_ = in_[:,:,::-1]
@@ -462,25 +480,14 @@ class MDL:
         if blob_name is not None:
             f = self.net.blobs[blob_name].data[0].argmax(axis=0)
             if len(f.shape) == 2:
-                plt.imsave(fname=self.caffe_root + "output/"+save_prefix+"_"+blob_name+"."+self.default_image_format, arr=f, format=self.default_image_format)
+                plt.imsave(fname=self.caffe_root + "/" + "output/"+save_prefix+"_"+blob_name+"."+self.default_image_format, arr=f, format=self.default_image_format)
+
     def visualizeLayers(self, save_prefix=""):
         for k, v in self.net.blobs.items():
             if (k[0] is not 'f' or k[1] is not 'c') and (k[0] is not 'p' or k[1] is not 'r'):
                 f = self.net.blobs[k].data[0, :36]
                 fig = self.vis_square(f, padval=1)
                 plt.imsave(fname="output/" + save_prefix + "_" + k + "." + self.default_image_format, arr=fig, format=self.default_image_format)
-
-    def visualizeLayersS(self, save_prefix=""):
-        print "Not Implemented"
-
-    def visualizeLayers_conv(self, filename, data, layout="single"):
-        print "Not implemented"
-
-    def visualizeLayers_pool(self, filename, data, layout="single"):
-        print "Not implemented"
-
-    def visualizeLayers_relu(self, filename, data):
-        print "Not implemented"
 
     def visualizeFilters(self):
         for k, v in self.net.params.items():

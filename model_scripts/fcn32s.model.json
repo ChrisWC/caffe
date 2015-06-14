@@ -4,8 +4,8 @@
     "Model Name":"FCN-32s Fully Convolutional Semantic Segmentation on PASCAL caffemodel",
     "Short Name":"FCN-32s Pascal",
     "Model Author":["Jonathon Long", "Evan Shelhamer", "Trevor Darrel"],
-    "Directory Path":[{"Prefix":"$USER", "Directory":"dev/caffe/models/"}],
-    "Directory Name":["FCN_32s_Pascal"],
+    "Directory Path":[{"Prefix":"", "Directory":"models/"}],
+    "Directory Name":["FCN_32s_PASCAL"],
     "UsingGistAsName":true,
     "Gist ID":"ac410cad48a088710872",
     "Dataset":[
@@ -13,44 +13,49 @@
             "Name":"Pascal", 
             "Version":"2010",
             "Files":{
-                "train.txt":"ImageSets/Segmentation/train.txt"
+                "train.txt":"ImageSets/Segmentation/train.txt",
                 "trainval.txt":"ImageSets/Segmentation/trainval.txt"
             }
-        }
+        },
         {"Name":"Pascal", "Version":"2011"}
         ],
-    "Files":[
-        {
+    "Files":{
+       "deploy":{
             "Function":"Deploy",
-            "Name":"fcn-32s-pascal-deploy.prototxt",
+            "Name":"deploy.prototxt",
             "In Gist":true
 
         },
-        {
+        "pretrained":{
+            "Function":"Pretrained Model",
+            "Name":"pretrained.caffemodel",
+            "In Gist":true
+        },
+        "readme":{
             "Function":"ReadMe",
             "Name":"readme.md",
             "In Gist":false
         }
-        ]
+        },
     "Pipeline":{
-        0:{
-            "Stage Name":"Preprocess"
-            "Script":["Preprocess"]
-            "Directory":["$MODEL_DIR"]
+        "0":{
+            "Stage Name":"Preprocess",
+            "Script":["Preprocess"],
+            "Directory":["$MODEL_DIR"],
             "Conditions":[]
-        }
-        1:{
-            "Stage Name":"Solve"
-            "Script":"Solve.py"
-            "Directory":["$MODEL_DIR"]
+        },
+        "1":{
+            "Stage Name":"Solve",
+            "Script":"Solve.py",
+            "Directory":["$MODEL_DIR"],
             "Conditions":["Training"]
-        }
-        2:{
-            "Stage Name":"Evaluate"
+        },
+        "2":{
+            "Stage Name":"Evaluate",
             "Script":"eval.py"
-        }
-        3:{
-            "Stage Name":"Save"
+        },
+        "3":{
+            "Stage Name":"Save",
             "Function":"save.py"
         }
     }

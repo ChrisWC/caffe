@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-caffe_root = "/home/chriswc/dev/caffe"
+caffe_root = "/home/chrwc/dev/caffe"
 
 data_sample = "/srv/datasets/mscoco/test2014/COCO_test2014_000000000001.jpg"
 
 gist_id = "FCN_32s_PASCAL"
-deploy = "/models/" + gist_id + "/fcn-32s-pascal-deploy.prototxt"
-pretrained = "/models/" + gist_id + "/fcn-32s-pascal.caffemodel"
+deploy = "/models/FCN_32s_PASCAL/deploy.prototxt"
+pretrained = "/models/FCN_32s_PASCAL/pretrained.caffemodel"
 
 import caffe
 
