@@ -1,5 +1,6 @@
 ## General
-
+./*output*/*
+./model_scripts/*output*/*
 # Compiled Object files
 *.slo
 *.lo
