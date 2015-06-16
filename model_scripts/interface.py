@@ -385,8 +385,8 @@ class MDL:
 
     def configureForTest(self):
         #plt.rcParams['figure.figsize'] = (10, 10)
-        #plt.rcParams['image.interpolation'] = 'nearest'
-        #plt.rcParams['image.cmap'] = 'gray'
+        plt.rcParams['image.interpolation'] = 'nearest'
+        plt.rcParams['image.cmap'] = 'gray'
         import os.path
 
         self.use_cpu()
@@ -452,7 +452,7 @@ class MDL:
             self.transformer.set_raw_scale('data', 255)
             self.transformer.set_channel_swap('data', (2,1,0))
 
-        while i < nmax or file_listing is not None:
+        while (nmax > 0 and i < nmax) or (nmax == 0 and i < len(k)) or file_listing is not None:
             print "file: " + k[i]
             if op == "fcn":
                 image = Image.open(self.data_location + k[i])

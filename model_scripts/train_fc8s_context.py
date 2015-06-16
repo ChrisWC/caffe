@@ -34,6 +34,7 @@ if Train == True:
 os.chdir(path)
 Test = True
 if Test == True:
+    model.pretrained_file = "pretrained.caffemodel"
     model.configureForTest()
     model.data_location = "/srv/datasets/pascal/VOCdevkit/VOC2010/JPEGImages/"
     image_set = "/srv/datasets/pascal/VOCdevkit/VOC2010/ImageSets/Segmentation/train.txt"
