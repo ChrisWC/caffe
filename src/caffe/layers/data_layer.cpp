@@ -64,6 +64,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->transformed_data_.Reshape(1, datum.channels(),
       datum.height(), datum.width());
   }
+  LOG(INFO) << "Performing legacy queries ...";
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();

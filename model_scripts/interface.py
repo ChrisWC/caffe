@@ -2,7 +2,6 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import caffe
 class MDL:
     def __init__(self,
                 caffe_root=None,
@@ -37,15 +36,9 @@ class MDL:
         self.allowModelBranchSpecification = True
         self.setCaffeDefaults()
         import sys
-<<<<<<< HEAD
         sys.path.insert(0, self.caffe_root + '/python')
         global caffe
         import caffe
-=======
-        #sys.path.insert(0, self.caffe_root + '/python')
-        #global caffe
-        #import caffe
->>>>>>> b5c97b63d8f7fffda41b3a8ac10bbaf008a2f61c
 
     def loadModel(self, modelConfigFile, outputConfig=False, run=True):
         import json
@@ -72,11 +65,8 @@ class MDL:
                 self.deploy_file = model["Files"]["deploy"]["Name"]
             if "pretrained" in model["Files"]:
                 self.pretrained_file = model["Files"]["pretrained"]["Name"]
-<<<<<<< HEAD
             if "solver" in model["Files"]:
                 self.solver_file = model["Files"]["solver"]["Name"]
-=======
->>>>>>> b5c97b63d8f7fffda41b3a8ac10bbaf008a2f61c
 
             """load in pipeline (check that files exsist"""
 
@@ -394,13 +384,10 @@ class MDL:
 
     def configureForTest(self):
         #plt.rcParams['figure.figsize'] = (10, 10)
-<<<<<<< HEAD
         plt.rcParams['image.interpolation'] = 'nearest'
         plt.rcParams['image.cmap'] = 'gray'
-=======
         #plt.rcParams['image.interpolation'] = 'nearest'
         #plt.rcParams['image.cmap'] = 'gray'
->>>>>>> b5c97b63d8f7fffda41b3a8ac10bbaf008a2f61c
         import os.path
 
         self.use_cpu()
@@ -466,17 +453,10 @@ class MDL:
             self.transformer.set_raw_scale('data', 255)
             self.transformer.set_channel_swap('data', (2,1,0))
 
-<<<<<<< HEAD
         while (nmax > 0 and i < nmax) or (nmax == 0 and i < len(k)) or file_listing is not None:
             print "file: " + k[i]
             if op == "fcn":
                 image = Image.open(self.data_location + k[i])
-=======
-        while i < nmax:
-            print k[i]
-            if op == "fcn":
-                image = Image.open(data_dir + k[i])
->>>>>>> b5c97b63d8f7fffda41b3a8ac10bbaf008a2f61c
                 in_ = np.array(image, dtype=np.float32)
                 in_ = in_[:,:,::-1]
                 in_ -= np.array((104.00698793, 116.66876762, 122.67891434))
