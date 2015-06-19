@@ -272,8 +272,6 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   int channels() { return channels_; }
   int height() { return height_; }
   int width() { return width_; }
-  virtual ~MemoryDataLayer();
-
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,

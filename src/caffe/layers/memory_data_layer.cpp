@@ -31,16 +31,6 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-MemoryDataLayer<Dtype>::~MemoryDataLayer()
-{
-    if (data_)
-        delete[] data_;
-
-    if (labels_)
-        delete[] labels_;
-}
-
-template <typename Dtype>
 void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   CHECK(!has_new_data_) <<
       "Can't add data until current data has been consumed.";
@@ -87,7 +77,6 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
   has_new_data_ = true;
 }
 
-
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
   CHECK(data);
@@ -98,19 +87,8 @@ void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
   if (this->layer_param_.has_transform_param()) {
     LOG(WARNING) << this->type() << " does not transform array data on Reset()";
   }
-    if ( data_)
-        delete[] data_;
-    
-    if (labels_)
-        delete[] labels_;
-    
-    data_ = new Dtype[n * size_];
-    labels_ = new Dtype[n];
-    
-    
-    memcpy(data_, data, sizeof(Dtype) * n * size_);
-    memcpy(labels_, labels, sizeof(Dtype) * n);
-    
+  data_ = data;
+  labels_ = labels;
   n_ = n;
   pos_ = 0;
 }
