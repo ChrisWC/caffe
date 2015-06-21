@@ -167,26 +167,7 @@ void Solver<Dtype>::Step(int iters) {
   vector<Dtype> losses;
   Dtype smoothed_loss = 0;
 
-  for (; iter_ < stop_iter; ++iter_) {
-    // zero-init the params
-    for (int i = 0; i < net_->params().size(); ++i) {
-      shared_ptr<Blob<Dtype> > blob = net_->params()[i];
-      switch (Caffe::mode()) {
-      case Caffe::CPU:
-        caffe_set(blob->count(), static_cast<Dtype>(0),
-            blob->mutable_cpu_diff());
-        break;
-      case Caffe::GPU:
-#ifndef CPU_ONLY
-        caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
-            blob->mutable_gpu_diff());
-#else
-        NO_GPU;
-#endif
-        break;
-      }
-    }
-
+  while (iter_ < stop_iter) {
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())) {
       TestAll();
@@ -194,13 +175,7 @@ void Solver<Dtype>::Step(int iters) {
 
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
-    // accumulate the loss and gradient
-    Dtype loss = 0;
-    for (int i = 0; i < param_.iter_size(); ++i) {
-      loss += net_->ForwardBackward(bottom_vec);
-    }
-    loss /= param_.iter_size();
-    // average the loss across iterations for smoothed reporting
+    Dtype loss = net_->ForwardBackward(bottom_vec);
     if (losses.size() < average_loss) {
       losses.push_back(loss);
       int size = losses.size();
@@ -235,8 +210,12 @@ void Solver<Dtype>::Step(int iters) {
     ComputeUpdateValue();
     net_->Update();
 
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+
     // Save a snapshot if needed.
-    if (param_.snapshot() && (iter_ + 1) % param_.snapshot() == 0) {
+    if (param_.snapshot() && iter_ % param_.snapshot() == 0) {
       Snapshot();
     }
   }
@@ -352,15 +331,14 @@ void Solver<Dtype>::Snapshot() {
   string model_filename, snapshot_filename;
   const int kBufferSize = 20;
   char iter_str_buffer[kBufferSize];
-  // Add one to iter_ to get the number of iterations that have completed.
-  snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_ + 1);
+  snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_);
   filename += iter_str_buffer;
   model_filename = filename + ".caffemodel";
   LOG(INFO) << "Snapshotting to " << model_filename;
   WriteProtoToBinaryFile(net_param, model_filename.c_str());
   SolverState state;
   SnapshotSolverState(&state);
-  state.set_iter(iter_ + 1);
+  state.set_iter(iter_);
   state.set_learned_net(model_filename);
   state.set_current_step(current_step_);
   snapshot_filename = filename + ".solverstate";
@@ -374,7 +352,7 @@ void Solver<Dtype>::Restore(const char* state_file) {
   NetParameter net_param;
   ReadProtoFromBinaryFile(state_file, &state);
   if (state.has_learned_net()) {
-    ReadProtoFromBinaryFile(state.learned_net().c_str(), &net_param);
+    ReadNetParamsFromBinaryFileOrDie(state.learned_net().c_str(), &net_param);
     net_->CopyTrainedLayersFrom(net_param);
   }
   iter_ = state.iter();
@@ -496,8 +474,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   case Caffe::CPU:
     for (int param_id = 0; param_id < net_params.size(); ++param_id) {
       // Compute the value to history, and then copy them to the blob's diff.
-      Dtype local_rate = rate * net_params_lr[param_id]
-                              / this->param_.iter_size();
+      Dtype local_rate = rate * net_params_lr[param_id];
       Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
 
       if (local_decay) {
@@ -533,8 +510,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
 #ifndef CPU_ONLY
     for (int param_id = 0; param_id < net_params.size(); ++param_id) {
       // Compute the value to history, and then copy them to the blob's diff.
-      Dtype local_rate = rate * net_params_lr[param_id]
-                              / this->param_.iter_size();
+      Dtype local_rate = rate * net_params_lr[param_id];
       Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
 
       if (local_decay) {
