@@ -60,6 +60,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
   int dim = prob_.count() / outer_num_;
   int count = 0;
   Dtype loss = 0;
+  
   for (int i = 0; i < outer_num_; ++i) {
     for (int j = 0; j < inner_num_; j++) {
       const int label_value = static_cast<int>(label[i * inner_num_ + j]);
@@ -68,9 +69,13 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
       }
       DCHECK_GE(label_value, 0);
       DCHECK_LT(label_value, prob_.shape(softmax_axis_));
-      loss -= log(std::max(prob_data[i * dim + label_value * inner_num_ + j],
-                           Dtype(FLT_MIN)));
-      ++count;
+      int index = i*dim + label_value * inner_num_ + j;
+      if (index < prob_.count())
+      {
+        loss -= log(std::max(prob_data[index],
+                           Dtype(FLT_MIN))); //error here, probably on array
+        ++count;
+      }
     }
   }
   if (normalize_) {
@@ -102,11 +107,19 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         const int label_value = static_cast<int>(label[i * inner_num_ + j]);
         if (has_ignore_label_ && label_value == ignore_label_) {
           for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
-            bottom_diff[i * dim + c * inner_num_ + j] = 0;
+            int index = i*dim + c*inner_num_+j;
+            if (index < prob_.count())
+            {
+                bottom_diff[i * dim + c * inner_num_ + j] = 0;
+            }
           }
         } else {
-          bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
-          ++count;
+            int index = i*dim + label_value * inner_num_ + j;
+            if (index < prob_.count())
+            {
+                bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+                ++count;
+            }
         }
       }
     }
@@ -119,10 +132,6 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
   }
 }
-
-#ifdef CPU_ONLY
-STUB_GPU(SoftmaxWithLossLayer);
-#endif
 
 INSTANTIATE_CLASS(SoftmaxWithLossLayer);
 REGISTER_LAYER_CLASS(SoftmaxWithLoss);
